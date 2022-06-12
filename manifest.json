@@ -1,0 +1,16 @@
+{
+  "manifest_version": 2,
+  "name": "Bookmarks",
+  "version": "1.0",
+  "homepage_url": "https://intra.devfaq.com/toolbar",
+  "description": "Allows the management of bookmarks for the intra site.",
+  "permissions": [
+    "bookmarks"
+  ],
+  "icons": {
+    "48": "icons/border-48.png"
+  },
+  "browser_action": {
+    "default_popup": "popup.html"
+  }
+}
