@@ -1,16 +1,25 @@
 {
   "manifest_version": 2,
-  "name": "Bookmarks",
+  "name": "Intra Site Toolbar",
   "version": "1.0",
   "homepage_url": "https://intra.devfaq.com/toolbar",
   "description": "Allows the management of bookmarks for the intra site.",
   "permissions": [
-    "bookmarks"
+    "bookmarks",
+    "storage"
   ],
   "icons": {
     "48": "icons/border-48.png"
   },
   "browser_action": {
     "default_popup": "popup.html"
+  },
+  "options_ui": {
+    "page": "options.html"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "admin@rockprofile.com"
+    }
   }
 }

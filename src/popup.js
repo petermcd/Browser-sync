@@ -2,7 +2,8 @@ document.getElementById("refresh").addEventListener("click", run);
 
 let BOOKMARK_URL = 'https://intra.devfaq.com/network/websites/websites.json';
 let website_name_prefix = 'Intranet - '
-var configured_bookmarks = [];
+let website_name_suffix = ''
+let configured_bookmarks = [];
 
 function add_bookmark(title, url){
     /*
@@ -18,7 +19,7 @@ function add_bookmark(title, url){
             url: url
         }
     );
-    createBookmark.then(bookmark_created);
+    createBookmark.then(bookmark_created, bookmark_create_failed);
 }
 
 function bookmark_created(bookmark_item) {
@@ -67,10 +68,10 @@ function compare_bookmarks(website, configured_bookmark) {
      Returns:
         True if matches otherwise false.
      */
-    website_name = website_name_prefix + website.name;
-    if (website_name == configured_bookmark.title && website.url == configured_bookmark.url) {
+    const website_name = website_name_prefix + website.name + website_name_suffix;
+    if (website_name === configured_bookmark.title && website.url === configured_bookmark.url) {
         return true;
-    } else if (website_name == configured_bookmark.title && website.url + '/' == configured_bookmark.url) {
+    } else if (website_name === configured_bookmark.title && website.url + '/' === configured_bookmark.url) {
         return true;
     }
     return false;
@@ -92,6 +93,29 @@ function fetch_remote_bookmarks(){
     fetch(BOOKMARK_URL).then(response => response.json()).then(data => sync_bookmarks(data['websites']));
 }
 
+function fetched_options(options) {
+    /*
+    Handler for success on fetching options.
+
+    Args:
+        options: Fetched options
+     */
+    console.log(options);
+    if (options.bookmarks_index) {
+        BOOKMARK_URL = options.bookmarks_index;
+    }
+}
+
+function fetch_options_failed(error) {
+    /*
+    Handler to show failure of fetching options.
+
+    Args:
+        error: Error showing why options failed to fetch.
+     */
+    console.log('Fetching options failed - ' + error);
+}
+
 function log_tree_failed(error) {
     /*
     Handle rejected request for receiving bookmarks.
@@ -110,12 +134,12 @@ function process_bookmark_item(bookmarkItem) {
         bookmarkItem: Bookmark item to process.
      */
     if (bookmarkItem.url) {
-        if (bookmarkItem.title.startsWith(website_name_prefix)) {
+        if (bookmarkItem.title.startsWith(website_name_prefix) && bookmarkItem.title.endsWith(website_name_suffix)) {
             configured_bookmarks.push(bookmarkItem);
         }
     }
     if (bookmarkItem.children) {
-        for (child of bookmarkItem.children) {
+        for (let child of bookmarkItem.children) {
             process_bookmark_item(child);
         }
     }
@@ -140,10 +164,10 @@ function sync_bookmarks(websites){
      */
 
     // Check if any new bookmarks are required.
-    for (website of websites) {
-        var found = false;
-        var found_item = null;
-        for (configured_bookmark of configured_bookmarks) {
+    for (let website of websites) {
+        let found = false;
+        let found_item = null;
+        for (let configured_bookmark of configured_bookmarks) {
             if (compare_bookmarks(website, configured_bookmark)) {
                 found = true;
                 found_item = configured_bookmark;
@@ -151,15 +175,15 @@ function sync_bookmarks(websites){
             }
         }
         if (!found) {
-            website_name = website_name_prefix + website.name;
+            let website_name = website_name_prefix + website.name + website_name_suffix;
             add_bookmark(website_name, website.url);
         }
     }
 
     // Check if configured bookmark is still required.
-    for (configured_bookmark of configured_bookmarks) {
-        var found = false;
-        for (website of websites) {
+    for (let configured_bookmark of configured_bookmarks) {
+        let found = false;
+        for (let website of websites) {
             if (compare_bookmarks(website, configured_bookmark)) {
                 found = true;
                 break;
@@ -173,8 +197,16 @@ function sync_bookmarks(websites){
 
 function run(){
     /* Entry point. */
+
+    // Fetch bookmark index URL.
+    //let get_bookmark_url = browser.storage.sync.get("bookmarks_index");
+    //get_bookmark_url.then(fetched_options, fetch_options_failed);
+
+    // Fetch bookmarks in the browser.
     let bookmarks = browser.bookmarks.getTree();
     bookmarks.then(process_log_tree, log_tree_failed);
+
+    // Fetch bookmarks from remote URL
     fetch_remote_bookmarks();
 }
 
