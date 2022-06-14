@@ -1,8 +1,8 @@
 document.getElementById("refresh").addEventListener("click", run);
 
-let BOOKMARK_URL = 'https://intra.devfaq.com/network/websites/websites.json';
-let website_name_prefix = 'Intranet - '
-let website_name_suffix = ''
+let bookmark_url = 'https://intra.devfaq.com/network/websites/websites.json';
+let bookmark_prefix = 'Intranet - '
+let bookmark_suffix = ''
 let configured_bookmarks = [];
 
 function add_bookmark(title, url){
@@ -68,13 +68,26 @@ function compare_bookmarks(website, configured_bookmark) {
      Returns:
         True if matches otherwise false.
      */
-    const website_name = website_name_prefix + website.name + website_name_suffix;
+    const website_name = get_website_name(website.name);
     if (website_name === configured_bookmark.title && website.url === configured_bookmark.url) {
         return true;
     } else if (website_name === configured_bookmark.title && website.url + '/' === configured_bookmark.url) {
         return true;
     }
     return false;
+}
+
+function get_website_name(original_name) {
+    /*
+    Formulate the website name with prefix and suffix.
+
+    Args:
+        original_name: The original website name.
+
+     Returns:
+        Website name with prefix and suffix.
+     */
+    return bookmark_prefix + original_name + bookmark_suffix;
 }
 
 function delete_bookmark(bookmark_item){
@@ -90,7 +103,7 @@ function delete_bookmark(bookmark_item){
 
 function fetch_remote_bookmarks(){
     /*Fetch the URL's from the remote server.*/
-    fetch(BOOKMARK_URL).then(response => response.json()).then(data => sync_bookmarks(data['websites']));
+    fetch(bookmark_url).then(response => response.json()).then(data => sync_bookmarks(data['websites']));
 }
 
 function fetched_options(options) {
@@ -100,9 +113,14 @@ function fetched_options(options) {
     Args:
         options: Fetched options
      */
-    console.log(options);
     if (options.bookmarks_index) {
-        BOOKMARK_URL = options.bookmarks_index;
+        bookmark_url = options.bookmarks_index;
+    }
+    if (options.bookmark_prefix) {
+        bookmark_prefix = options.bookmark_prefix;
+    }
+    if (options.bookmark_suffix) {
+        bookmark_suffix = options.bookmark_suffix;
     }
 }
 
@@ -134,7 +152,7 @@ function process_bookmark_item(bookmarkItem) {
         bookmarkItem: Bookmark item to process.
      */
     if (bookmarkItem.url) {
-        if (bookmarkItem.title.startsWith(website_name_prefix) && bookmarkItem.title.endsWith(website_name_suffix)) {
+        if (bookmarkItem.title.startsWith(bookmark_prefix) && bookmarkItem.title.endsWith(bookmark_suffix)) {
             configured_bookmarks.push(bookmarkItem);
         }
     }
@@ -175,7 +193,7 @@ function sync_bookmarks(websites){
             }
         }
         if (!found) {
-            let website_name = website_name_prefix + website.name + website_name_suffix;
+            let website_name = get_website_name(website.name);
             add_bookmark(website_name, website.url);
         }
     }
@@ -198,15 +216,18 @@ function sync_bookmarks(websites){
 function run(){
     /* Entry point. */
 
+    // Reset configured bookmarks.
+    configured_bookmarks = [];
+
     // Fetch bookmark index URL.
-    //let get_bookmark_url = browser.storage.sync.get("bookmarks_index");
-    //get_bookmark_url.then(fetched_options, fetch_options_failed);
+    let get_bookmark_url = browser.storage.sync.get(["bookmarks_index", "bookmark_prefix", "bookmark_suffix"]);
+    get_bookmark_url.then(fetched_options, fetch_options_failed);
 
     // Fetch bookmarks in the browser.
     let bookmarks = browser.bookmarks.getTree();
     bookmarks.then(process_log_tree, log_tree_failed);
 
-    // Fetch bookmarks from remote URL
+    // Fetch bookmarks from remote URL.
     fetch_remote_bookmarks();
 }
 
