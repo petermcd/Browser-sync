@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Bookmark Sync",
   "version": "1.0",
-  "homepage_url": "https://petermcdonald.co.uk/bookmark-sync",
+  "homepage_url": "https://petermcdonald.co.uk/bookmark-sync.html",
   "description": "A Firefox extension that allows the syncing of bookmarks from a JSON file.",
   "permissions": [
     "bookmarks",
